@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneWeb Command Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            min-width: 80%;
+        }
+
+        .mermaid {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>UI Command Execution Flow</h1>
+    <p>Use your browser's zoom (Ctrl + / Cmd +) to enlarge the diagram.</p>
+    <div class="container">
+        <div class="mermaid">
+            sequenceDiagram
+            participant User
+            participant CP as ControlPanel (React)
+            participant App as App.tsx (React)
+            participant GW as REST Gateway (Express)
+            participant gRPC as gRPC Server
+            participant Sim as DroneSimulator (JS)
+            Note over User, CP: 1. User Clicks Button
+            User->>CP: Click "ARM" / "TAKEOFF"
+            CP->>App: sendCommand('ARM')
+
+            Note over App, GW: 2. HTTP Request
+
+            App->>GW: POST /api/command { type: 'ARM' }
+
+            Note over GW, gRPC: 3. gRPC Call
+
+            GW->>gRPC: client.SendCommand({ type: 'ARM' })
+
+            Note over gRPC, Sim: 4. Simulation Logic
+
+            gRPC->>Sim: simulator.arm()
+
+            alt Success
+            Sim-->>gRPC: return true
+            gRPC-->>GW: { success: true, message: "Drone Armed" }
+            GW-->>App: 200 OK { success: true, ... }
+            App->>App: addLog("ACK: Drone Armed")
+            else Failure
+            Sim-->>gRPC: return false
+            gRPC-->>GW: { success: false, message: "Failed..." }
+            GW-->>App: 200 OK { success: false, ... }
+            App->>App: addLog("ACK: Failed...")
+            end
+        </div>
+    </div>
+</body>
+
+</html>

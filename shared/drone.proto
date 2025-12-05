@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package drone;
+
+service DroneService {
+  rpc SendCommand (CommandRequest) returns (CommandResponse) {}
+}
+
+message CommandRequest {
+  enum CommandType {
+    ARM = 0;
+    DISARM = 1;
+    TAKEOFF = 2;
+    LAND = 3;
+    START_MISSION = 4;
+    RETURN_TO_HOME = 5;
+    GOTO = 6;
+  }
+  CommandType type = 1;
+  float param1 = 2; // Optional parameter (e.g., altitude)
+  float param2 = 3; // Optional parameter (e.g., latitude)
+  float param3 = 4; // Optional parameter (e.g., longitude)
+}
+
+message CommandResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Telemetry {
+  double latitude = 1;
+  double longitude = 2;
+  double altitude = 3;
+  double speed = 4;
+  float battery = 5; // 0.0 to 1.0
+  string status = 6; // "LANDED", "FLYING", etc.
+  float heading = 7;
+  float wind_speed = 8; // New field for wind simulation
+}
